@@ -1,0 +1,18 @@
+
+kafka-console-consumer --bootstrap-server localhost:9092 --consumer.config consumer.properties --from-beginning --topic test
+
+kafka-consumer-groups \
+    --bootstrap-server localhost:9092 \
+    --command-config consumer.properties \
+    --group mmvn \
+    --describe
+
+# Wait consumner client inactive in 5 minutes / or delete instance in prior
+kafka-consumer-groups \
+    --bootstrap-server localhost:9092 \
+    --command-config consumer.properties \
+    --group mmvn \
+    --topic test \
+    --reset-offsets \
+    --shift-by -1 \
+    --execute

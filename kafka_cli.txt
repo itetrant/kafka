@@ -1,0 +1,232 @@
+1. Cofig file: 
+	/home/kafka/config
+2. Check status:
+	systemctl status kafka
+	systemctl status zookeeper
+	systemctl stop kafka
+	systemctl start kafka
+kafka
+hgfhgf89jhj()HN
+--
+systemctl --type=service --state=running
+--list of users
+cut -d: -f1 /etc/passwd
+
+sudo firewall-cmd --add-port=5601/tcp --permanent
+sudo firewall-cmd --reload
+
+-------
+3.tao topic
+	bin/kafka-topics.sh --create --bootstrap-server 172.26.24.186:9092 --replication-factor 1 --partitions 1 --topic Test
+
+	bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic Test
+4.check topic
+	bin/kafka-topics.sh --describe --bootstrap-server 172.26.24.186:9092 --topic share-app-notification
+
+--check topic list
+	bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+	bin/kafka-topics.sh --list --bootstrap-server 172.26.24.186:9092
+
+
+CMS_NOTI
+INVENTORY_SERVICE
+ORDER_SERVICE
+SHIPMENT_SERVICE
+__consumer_offsets
+connect-configs
+connect-offsets
+connect-status
+ecp-events
+example-topic
+logs
+quickstart-events
+share-app-notification
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic CMS_NOTI --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic INVENTORY_SERVICE --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic connect-configs --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic connect-offsets --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic connect-status --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic ecp-events --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic logs --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic quickstart-events --from-beginning
+
+
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic logs
+	bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic logs_index
+
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic CMS_NOTI --from-beginning
+
+	bin/kafka-console-producer.sh --bootstrap-server 172.26.24.186:9092 --topic oracle_topic
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic oracle_topic --from-beginning
+bin/kafka-delete-records.sh --bootstrap-server 172.26.24.186:9092 --offset-json-file delete_records_oracle.json
+
+
+	bin/kafka-console-producer.sh --bootstrap-server 172.26.24.186:9092 --topic example-topic
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic example-topic --from-beginning
+	bin/kafka-topics.sh --bootstrap-server 172.26.24.186:9092 --delete --topic example-topic
+	bin/kafka-delete-records.sh --bootstrap-server 172.26.24.186:9092 --offset-json-file delete_records.json
+
+
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic example-topic --from-beginning
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic INVENTORY_SERVICE --from-beginning
+	bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic SHIPMENT_SERVICE --from-beginning
+
+--PROD
+bin/kafka-topics.sh --list --bootstrap-server 172.26.9.186:9092
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.9.186:9092 --topic share-app-notification
+--
+
+Current: Stop loss not-yet-consumed msg
+To-check: Son
+--
+node clients/cloud/nodejs/producer_event.js -t quickstart-events
+
+-===============BACKUP==========================
+tar -czf /home/kafka/zookeeper-backup.tar.gz /tmp/zookeeper/*
+sudo systemctl stop kafka
+sudo -iu kafka
+tar -czf /home/kafka/kafka-backup.tar.gz /tmp/kafka-logs/*
+OR
+tar -czf /home/admin/kafka-backup.tar.gz /var/lib/kafka/*
+-===============RESTORE=========================
+sudo systemctl stop kafka 
+sudo systemctl stop zookeeper
+sudo -iu kafka 
+rm -r /tmp/zookeeper/*
+tar -C /tmp/zookeeper -xzf /home/kafka/zookeeper-backup.tar.gz --strip-components 2
+rm -r /tmp/kafka-logs/* 
+tar -C /tmp/kafka-logs -xzf /home/kafka/kafka-backup.tar.gz --strip-components 2 
+-------------------------
+OR
+tar -C /var/lib/kafka -xzf /home/admin/kafka-backup.tar.gz --strip-components 3 
+sudo chmod 777 -R /var/lib/kafka
+------------------------
+sudo systemctl start zookeeper
+sudo systemctl start kafka 
+
+NOTE if MOVE to other SERVER: 
+sudo chown kafka /home/kafka/zookeeper-backup.tar.gz /home/kafka/kafka-backup.tar.gz
+
+-----------------------------------------------------------------------------------
+NEW CONFLUENT PLATFORM
+sudo yum install curl which
+sudo rpm --import https://packages.confluent.io/rpm/7.2/archive.key
+cd /etc/yum.repos.d/
+sudo vi confluent.repo
+[Confluent]
+name=Confluent repository
+baseurl=https://packages.confluent.io/rpm/7.2
+gpgcheck=1
+gpgkey=https://packages.confluent.io/rpm/7.2/archive.key
+enabled=1
+
+[Confluent-Clients]
+name=Confluent Clients repository
+baseurl=https://packages.confluent.io/clients/rpm/centos/$releasever/$basearch
+gpgcheck=1
+gpgkey=https://packages.confluent.io/clients/rpm/archive.key
+enabled=1
+sudo yum clean all && sudo yum install confluent-platform
+
+--Fix log4j error file://
+sudo vi /usr/bin/ksql
+#base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" ).." && pwd )
+--
+--Config
+/etc/kafka/zookeeper.properties
+/etc/kafka/server.properties
+/etc/schema-registry/schema-registry.properties
+/etc/kafka-rest/kafka-rest.properties
+/etc/kafka/connect-distributed.properties
+/etc/ksqldb/ksql-server.properties
+--logs
+/var/log/kafka
+--data
+/var/lib/kafka
+-------------------------------------------
+/usr/lib/systemd/system
+ss -tunelp | grep 7075
+
+systemctl --type=service --stat=running
+
+sudo systemctl start confluent-zookeeper
+sudo systemctl start confluent-kafka
+sudo systemctl start confluent-kafka-rest
+sudo systemctl start confluent-kafka-connect
+sudo systemctl start confluent-schema-registry
+
+sudo systemctl start confluent-ksqldb
+-------------------------------------------
+sudo systemctl stop confluent-ksqldb
+sudo systemctl stop confluent-kafka-connect
+sudo systemctl stop confluent-kafka-rest
+sudo systemctl stop confluent-schema-registry
+sudo systemctl stop confluent-kafka
+sudo systemctl stop confluent-zookeeper
+
+sudo systemctl restart confluent-kafka-connect
+
+bin/kafka-console-producer.sh --bootstrap-server 172.26.24.186:9092 --topic FOO_02
+bin/kafka-delete-records.sh --bootstrap-server 172.26.24.186:9092 --offset-json-file delete_foo_02.json
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic users-json --from-beginning
+
+#auth conf
+#zookeeper.properties
+authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+requireClientAuthScheme=sasl
+jaasLoginRenew=3600000
+
+#zookeeper_jaas.conf
+Server {
+org.apache.zookeeper.server.auth.DigestLoginModule required
+   user_super="zookeeper"
+   user_admin="admin-secret";
+};
+
+#server.properties
+security.inter.broker.protocol=SASL_PLAINTEXT
+sasl.mechanism.inter.broker.protocol=PLAIN
+sasl.enabled.mechanisms=PLAIN
+authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer
+allow.everyone.if.no.acl.found=true
+auto.create.topics.enable=true
+listeners=SASL_PLAINTEXT://<IP Address>:9092
+advertised.listeners=SASL_PLAINTEXT://<IP Address>:9092
+
+#kafka_server_jaas.conf
+KafkaServer {
+org.apache.kafka.common.security.plain.PlainLoginModule required
+username="admin"
+password="admin-secret"
+user_admin="admin-secret";
+};
+Client {
+org.apache.zookeeper.server.auth.DigestLoginModule required
+username="admin"
+password="admin-secret";
+};
+
+#run auth
+sudo systemctl stop confluent-zookeeper
+export KAFKA_OPTS="-Djava.security.auth.login.config=/home/kafka/config/zookeeper_jaas.conf"
+sudo systemctl start confluent-zookeeper
+
+sudo systemctl stop confluent-kafka
+export KAFKA_OPTS=-Djava.security.auth.login.config=/home/kafka/config/kafka_server_jaas.conf
+sudo systemctl start confluent-kafka
+--java.lang.ClassNotFoundException: kafka.security.auth.SimpleAclAuthorizer
+
+listener.name.SASL_PLAINTEXT.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+username="username" \
+password="Password" \
+user_username="Password";
+
+
+bin/kafka-console-producer.sh --bootstrap-server 172.26.24.186:9092 --topic quickstart-events
+
+-----------------
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.322.b06-1.el7_9.x86_64/jre
+
+export KAFKA_OPTS="-Djava.security.auth.login.config=/home/kafka/config/zookeeper_jaas.conf"
+
+export KAFKA_OPTS=-Djava.security.auth.login.config=/home/kafka/config/kafka_server_jaas.conf

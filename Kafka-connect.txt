@@ -1,0 +1,343 @@
+Schema_Type	MySQL	Oracle	PostgreSQL	SQLite	SQL Server
+INT8	TINYINT	NUMBER(3,0)	SMALLINT	NUMERIC	TINYINT
+INT16	SMALLINT	NUMBER(5,0)	SMALLINT	NUMERIC	SMALLINT
+INT32	INT	NUMBER(10,0)	INT	NUMERIC	INT
+INT64	BIGINT	NUMBER(19,0)	BIGINT	NUMERIC	BIGINT
+FLOAT32	FLOAT	BINARY_FLOAT	REAL	REAL	REAL
+FLOAT64	DOUBLE	BINARY_DOUBLE	DOUBLE PRECISION	REAL	FLOAT
+BOOLEAN	TINYINT	NUMBER(1,0)	BOOLEAN	NUMERIC	BIT
+STRING	VARCHAR(256)	NCLOB	TEXT	TEXT	VARCHAR(MAX)
+BYTES	VARBINARY(1024)	BLOB	BYTEA	BLOB	VARBINARY(MAX)
+‘Decimal’	DECIMAL(65,s)	NUMBER(*,s)	DECIMAL	NUMERIC	DECIMAL(38,s)
+‘Date’	DATE	DATE	DATE	NUMERIC	DATE
+‘Time’	TIME(3)	DATE	TIME	NUMERIC	TIME
+‘Timestamp’	TIMESTAMP(3)	TIMESTAMP	TIMESTAMP	NUMERIC	DATETIME2
+
+----utils
+https://computingforgeeks.com/how-to-install-elasticsearch-on-centos/
+bin/connect-standalone.sh config/connect-standalone.properties config/elasticsearch-connect.properties
+bin/kafka-console-producer.sh --broker-list 172.26.24.186:9092 --topic example-topic
+curl 'localhost:8083/connectors/elasticsearch-sink/status'
+curl -XPOST localhost:8083/connectors/elasticsearch-sink/tasks/0/restart
+curl -XPOST localhost:8083/connectors/elasticsearch-sink/restart
+
+curl 'localhost:8083/connectors/oracle-sink/status'
+curl -XPOST localhost:8083/connectors/oracle-sink/tasks/0/restart
+bin/kafka-console-producer.sh --broker-list 172.26.24.186:9092 --topic oracle_topic
+bin/kafka-console-consumer.sh --bootstrap-server 172.26.24.186:9092 --topic FOO_02 --from-beginning
+
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic postgres_dumb_table --from-beginning
+
+bin/kafka-delete-records.sh --bootstrap-server 172.26.24.186:9092 --offset-json-file delete_records_oracle.json
+kafka-delete-records.sh --bootstrap-server 172.26.24.186:9092 --offset-json-file delete_records_oracle.json
+
+--===================================================================
+--Copy connector jars to docker
+docker ps
+docker cp C:/App/kafka-connect-jars b396ef093a82:/connect-plugins
+docker restart kafka-connect
+
+io.confluent.connect.jdbc.JdbcSinkConnector
+io.confluent.connect.avro.AvroConverter
+
+-->OK
+CREATE STREAM FOO_01 (COL1 INTEGER, COL2 INTEGER) WITH (KAFKA_TOPIC='FOO_01', PARTITIONS=1, VALUE_FORMAT='AVRO');
+INSERT INTO FOO_01 (COL1,COL2) VALUES (0,0);
+
+CREATE SINK CONNECTOR SINK_FOO_01_0 WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='FOO_01',
+'connection.url'='jdbc:oracle:thin:@172.26.24.109:1521/GC510JSERV',
+'connection.user'='cen510',
+'connection.password'='cen510',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='io.confluent.connect.avro.AvroConverter',
+'value.converter'='io.confluent.connect.avro.AvroConverter',
+'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+'value.converter.schema.registry.url'='http://172.26.24.186:8081'
+);
+
+
+CREATE STREAM FOO_03 (COL1 INTEGER, COL2 INTEGER) WITH (KAFKA_TOPIC='FOO_03', PARTITIONS=1, VALUE_FORMAT='AVRO');
+INSERT INTO FOO_03 (COL1,COL2) VALUES (0,0);
+CREATE SINK CONNECTOR SINK_FOO_03_0 WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='FOO_03',
+'connection.url'='jdbc:postgresql://postgres-14.1:5432/postgres',
+'connection.user'='postgres',
+'connection.password'='postgres',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='io.confluent.connect.avro.AvroConverter',
+'value.converter'='io.confluent.connect.avro.AvroConverter',
+'key.converter.schema.registry.url'='http://schemaregistry:8081',
+'value.converter.schema.registry.url'='http://schemaregistry:8081'
+);
+
+--check docker
+--
+# vi /var/lib/postgresql/data/pg_hba.conf
+host    all     all     0.0.0.0/0       trust
+
+#psql -U postgres
+postgres=# \c postgres
+select * from 'FOO_03';
+------------------------
+tasks.max=1
+pk.mode=record_value
+insert.mode=upsert
+#table.name.format=oracle_topic
+pk.fields=id
+#fields.whitelist=product,quantity,price
+batch.size=0
+#delete.enabled=true
+
+*********************************
+--> NOT OK
+
+CREATE STREAM FOO_02 (COL1 INTEGER, COL2 INTEGER) WITH (KAFKA_TOPIC='FOO_02', PARTITIONS=1, VALUE_FORMAT='JSON');
+INSERT INTO FOO_02 (COL1,COL2) VALUES (0,0);
+INSERT INTO FOO_02 (COL1,COL2) VALUES (0,1);
+INSERT INTO FOO_02 (COL1,COL2) VALUES (1,0);
+
+
+CREATE SINK CONNECTOR SINK_FOO_02_0 WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='FOO_02',
+'connection.url'='jdbc:postgresql://postgres-14.1:5432/postgres',
+'connection.user'='postgress',
+'connection.password'='postgress',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'key.converter.schema.registry.url'='http://schemaregistry:8081',
+'value.converter.schema.registry.url'='http://schemaregistry:8081'
+);
+
+
+CREATE SINK CONNECTOR SINK_FOO_02_0 WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='FOO_02',
+'connection.url'='jdbc:oracle:thin:@172.26.24.109:1521/GC510JSERV',
+'connection.user'='cen510',
+'connection.password'='cen510',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+'value.converter.schema.registry.url'='http://172.26.24.186:8081'
+);
+
+*********************************
+--->OK
+CREATE SINK CONNECTOR elastic_users_json WITH (
+'connector.class'='io.confluent.connect.elasticsearch.ElasticsearchSinkConnector',
+'topics'='users-json',
+'connection.url'='http://172.26.16.109:9200',
+'connection.username'='aspiron',
+'connection.password'='P@ssw0rd',
+'type.name'='kafka-connect',
+'key.ignore'='true',
+'schema.ignore'='true',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter.schemas.enable'='false'
+);
+
+CREATE SINK CONNECTOR elastic_users_json WITH (
+'connector.class'='io.confluent.connect.elasticsearch.ElasticsearchSinkConnector',
+'topics'='users-json',
+'connection.url'='http://elastic:9200',
+'type.name'='kafka-connect',
+'key.ignore'='true',
+'schema.ignore'='true',
+'auto.create'='true',
+'auto.evolve'='true',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter.schemas.enable'='false'
+);
+
+CREATE STREAM test_index (_id STRING, COL1 INTEGER, COL2 INTEGER) WITH (KAFKA_TOPIC='test_index', PARTITIONS=1, VALUE_FORMAT='JSON');
+
+CREATE SINK CONNECTOR elastic_test_index WITH (
+'connector.class'='io.confluent.connect.elasticsearch.ElasticsearchSinkConnector',
+'topics'='test_index',
+'connection.url'='http://elastic:9200',
+'type.name'='_doc',
+'key.ignore'='true',
+'schema.ignore'='true',
+'auto.create'='true',
+'auto.evolve'='true',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter.schemas.enable'='false'
+);
+
+
+INSERT INTO test_index (_id,COL1,COL2) VALUES ('bef0b307-ae93-4bdb-b853-91dc4cb7491a',1,0);
+
+
+CREATE STREAM TEST01 (COL1 INTEGER, COL2 INTEGER) WITH (KAFKA_TOPIC='TEST01', PARTITIONS=1, VALUE_FORMAT='AVRO');
+INSERT INTO TEST01 (ROWKEY,COL1,COL2) VALUES ('X',1,0);
+
+
+CREATE STREAM users_json(ID STRING, FIRSTNAME STRING, LASTNAME STRING) WITH (KAFKA_TOPIC='users-json', PARTITIONS=1, VALUE_FORMAT='JSON');
+SELECT COUNT(*) from USERS_JSON group by 1 emit changes;
+
+SET 'auto.offset.reset' = 'earliest';
+CREATE TABLE USERS_JSON_CNT AS
+    SELECT 'X' AS X,
+        COUNT(*) AS MSG_CT
+    FROM USERS_JSON
+    GROUP BY 'X'
+    EMIT CHANGES;
+select * from USERS_JSON_CNT;
+
+--
+CREATE STREAM users_avro(ID STRING, FIRSTNAME STRING, LASTNAME STRING) WITH (KAFKA_TOPIC='users-avro', PARTITIONS=1, VALUE_FORMAT='AVRO');
+CREATE TABLE USERS_AVRO_CNT AS
+    SELECT 'X' AS X,
+        COUNT(*) AS MSG_CT
+    FROM USERS_AVRO
+    GROUP BY 'X'
+    EMIT CHANGES;
+
+select * from USERS_AVRO_CNT;
+
+CREATE SINK CONNECTOR SINK_USERS_AVRO_0 WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='users-avro',
+'connection.url'='jdbc:postgresql://postgres-14.1:5432/postgres',
+'connection.user'='postgres',
+'connection.password'='postgres',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='io.confluent.connect.avro.AvroConverter',
+'value.converter'='io.confluent.connect.avro.AvroConverter',
+'key.converter.schema.registry.url'='http://schemaregistry:8081',
+'value.converter.schema.registry.url'='http://schemaregistry:8081'
+);
+
+--===============
+
+CREATE STREAM users_json(ID STRING, FIRSTNAME STRING, LASTNAME STRING) WITH (KAFKA_TOPIC='users-json', PARTITIONS=1, VALUE_FORMAT='JSON');
+CREATE TABLE USERS_JSON_CNT AS
+    SELECT 'X' AS X,
+        COUNT(*) AS MSG_CT
+    FROM USERS_JSON
+    GROUP BY 'X'
+    EMIT CHANGES;
+
+select * from USERS_JSON_CNT;
+
+--CREATE SOURCE connector: WORKS
+
+CREATE SOURCE CONNECTOR src_users WITH (
+ 'connector.class'='io.confluent.connect.jdbc.JdbcSourceConnector',
+ 'connection.url'='jdbc:postgresql://172.26.128.29:5432/postgres',
+ 'connection.user'='postgres',
+ 'connection.password'='postgres',
+ 'table.whitelist'='users',
+ 'mode'='incrementing',
+ 'incrementing.column.name'='id',
+ 'topic.prefix'='postgres_'
+);
+
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic postgres_dumb_table --from-beginning
+---
+
+CREATE SOURCE CONNECTOR src_users WITH (
+  'connector.class'='io.confluent.connect.jdbc.JdbcSourceConnector',
+ 'connection.url'='jdbc:postgresql://172.26.128.29:5432/postgres',
+ 'connection.user'='postgres',
+ 'connection.password'='postgres',
+ 'table.whitelist'='users',
+ 'mode'='incrementing',
+ 'incrementing.column.name'='id',
+ 'topic.prefix'='postgres_',
+ 'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+ 'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+ 'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+ 'value.converter.schema.registry.url'='http://172.26.24.186:8081'
+);
+
+
+CREATE SOURCE CONNECTOR src_users WITH (
+  'connector.class'='io.confluent.connect.jdbc.JdbcSourceConnector',
+ 'connection.url'='jdbc:sqlserver://172.26.128.29:5432/postgres',
+ 'connection.user'='postgres',
+ 'connection.password'='postgres',
+ 'table.whitelist'='users',
+ 'mode'='incrementing',
+ 'incrementing.column.name'='id',
+ 'topic.prefix'='sql_',
+ 'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+ 'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+ 'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+ 'value.converter.schema.registry.url'='http://172.26.24.186:8081'
+);
+
+
+---sqlserver
+
+--> works
+
+CREATE SINK CONNECTOR sink_ora_users WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='postgres_users',
+'connection.url'='jdbc:oracle:thin:@172.26.24.109:1521/GC510JSERV',
+'connection.user'='cen510',
+'connection.password'='cen510',
+'key.ignore'='true',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+'value.converter.schema.registry.url'='http://172.26.24.186:8081'
+);
+
+--WORKS ignore wrong format
+
+CREATE SINK CONNECTOR sink_users_errors WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='postgres_users',
+'connection.url'='jdbc:oracle:thin:@172.26.24.109:1521/GC510JSERV',
+'connection.user'='cen510',
+'connection.password'='cen510',
+'key.ignore'='true',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+'value.converter.schema.registry.url'='http://172.26.24.186:8081',
+'errors.tolerance'='all'
+);
+
+CREATE STREAM sink_users_errors(ID INTEGER, FIRSTNAME STRING, LASTNAME STRING) WITH (KAFKA_TOPIC='postgres_users', PARTITIONS=1, VALUE_FORMAT='JSON');
+
+kafka-console-producer.sh --broker-list 172.26.24.186:9092 --topic postgres_users
+
+--testing...
+
+CREATE SINK CONNECTOR sink_users_errors_log WITH (
+'connector.class'='io.confluent.connect.jdbc.JdbcSinkConnector',
+'topics'='postgres_users',
+'connection.url'='jdbc:oracle:thin:@172.26.24.109:1521/GC510JSERV',
+'connection.user'='cen510',
+'connection.password'='cen510',
+'key.ignore'='true',
+'auto.create'='true',
+'auto.evolve'='true',
+'key.converter'='org.apache.kafka.connect.json.JsonConverter',
+'value.converter'='org.apache.kafka.connect.json.JsonConverter',
+'key.converter.schema.registry.url'='http://172.26.24.186:8081',
+'value.converter.schema.registry.url'='http://172.26.24.186:8081',
+'errors.tolerance'='all',
+'errors.deadletterqueue.topic.name'='sink_users_errors'
+);
+
+kafka-console-consumer --bootstrap-server 172.26.24.186:9992 --topic bcard_avro_user_store --from-beginning
+CREATE OR REPLACE STREAM BCARD_USER_STORE_INDEX (USER_STORE_ID INTERGER, CUSTOMER_NO STRING, HOME_SERVICE INTERGER) WITH (KAFKA_TOPIC='bcard_avro_user_store', PARTITIONS=1, VALUE_FORMAT='AVRO') EMIT CHANGES;

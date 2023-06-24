@@ -1,0 +1,61 @@
+INSTALLATION
+----------------------------------------------------------------------------------- 
+sudo yum install curl which
+sudo rpm --import https://packages.confluent.io/rpm/7.2/archive.key
+cd /etc/yum.repos.d/
+sudo vi confluent.repo
+[Confluent]
+name=Confluent repository
+baseurl=https://packages.confluent.io/rpm/7.2
+gpgcheck=1
+gpgkey=https://packages.confluent.io/rpm/7.2/archive.key
+enabled=1
+
+[Confluent-Clients]
+name=Confluent Clients repository
+baseurl=https://packages.confluent.io/clients/rpm/centos/$releasever/$basearch
+gpgcheck=1
+gpgkey=https://packages.confluent.io/clients/rpm/archive.key
+enabled=1
+
+sudo yum clean all && sudo yum install confluent-platform
+yum remove confluent-*
+
+chown cp-kafka:confluent /var/lib/zookeeper && chmod u+wx,g+r,o= /var/lib/zookeeper
+chown cp-kafka:confluent /data/zookeeper && chmod u+wx,g+r,o= /data/zookeeper
+chown cp-kafka:confluent /data/kafka-streams && chmod u+wx,g+r,o= /data/kafka-streams
+chown cp-kafka:confluent /data/kafka && chmod u+wx,g+r,o= /data/kafka
+chown cp-kafka:confluent /usr/share/java/ksqldb && chmod u+wx,g+r,o= /usr/share/java/ksqldb
+
+--Fix log4j error file://
+sudo vi /usr/bin/ksql
+#base_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" ).." && pwd )
+
+--Config
+/etc/kafka/zookeeper.properties
+/etc/kafka/server.properties
+/etc/schema-registry/schema-registry.properties
+/etc/kafka-rest/kafka-rest.properties
+/etc/kafka/connect-distributed.properties
+/etc/ksqldb/ksql-server.properties
+
+/usr/lib/systemd/system
+
+--Start-----------------------------------
+sudo systemctl start confluent-zookeeper
+sudo systemctl start confluent-kafka
+sudo systemctl start confluent-kafka-rest
+sudo systemctl start confluent-kafka-connect
+sudo systemctl start confluent-schema-registry
+sudo systemctl start confluent-ksqldb
+--Stop------------------------------------
+sudo systemctl stop confluent-ksqldb
+sudo systemctl stop confluent-schema-registry
+sudo systemctl stop confluent-kafka-connect
+sudo systemctl stop confluent-kafka-rest
+sudo systemctl stop confluent-kafka
+sudo systemctl stop confluent-zookeeper
+--Check-----------------------------------
+systemctl --type=service --stat=running | grep confluent 
+
+docker run --rm edenhill/kcat:1.7.1 -b 172.26.24.186:9092 -t ${1} -C -e -q | wc -l

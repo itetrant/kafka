@@ -1,0 +1,16 @@
+sudo dnf install java-11-openjdk wget vim
+wget https://downloads.apache.org/kafka/3.0.0/kafka_2.13-3.0.0.tgz
+tar xzf kafka_2.13-3.0.0.tgz
+mv kafka_2.13-3.0.0 /usr/local/kafka
+cd /usr/local/kafka
+bin/kafka-topics.sh --create  --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+#server.properties
+advertised.listeners=PLAINTEXT://mmvietnam.online:9092
+listeners=PLAINTEXT://0.0.0.0:9092
+#by default: auto create topic
+
+
+export KAFKA_OPTS="-Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf"
+
+export KAFKA_OPTS="-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
